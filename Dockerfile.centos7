@@ -1,0 +1,71 @@
+FROM centos:7
+LABEL maintainer ywatase
+
+ARG GLUE_VERSION=glue-1.0
+ARG MAVEN_VERSION=3.6.2
+ARG SPARK_VERSION=2.4.3
+ARG HADOOP_VERSION=2.8
+
+RUN yum install -y curl unzip  git \
+    && yum install -y https://centos7.iuscommunity.org/ius-release.rpm \
+    && yum install -y python36u python36u-libs python36u-devel python36u-pip \
+    && yum install -y java java-1.8.0-openjdk-devel \
+    && rm -rf /var/cache/yum/*
+
+RUN localedef -f UTF-8 -i ja_JP ja_JP.UTF-8
+ENV LANG ja_JP.UTF-8
+ENV LC_CTYPE "ja_JP.UTF-8"
+ENV LC_NUMERIC "ja_JP.UTF-8"
+ENV LC_TIME "ja_JP.UTF-8"
+ENV LC_COLLATE "ja_JP.UTF-8"
+ENV LC_MONETARY "ja_JP.UTF-8"
+ENV LC_MESSAGES "ja_JP.UTF-8"
+ENV LC_PAPER "ja_JP.UTF-8"
+ENV LC_NAME "ja_JP.UTF-8"
+ENV LC_ADDRESS "ja_JP.UTF-8"
+ENV LC_TELEPHONE "ja_JP.UTF-8"
+ENV LC_MEASUREMENT "ja_JP.UTF-8"
+ENV LC_IDENTIFICATION "ja_JP.UTF-8"
+ENV LC_ALL ja_JP.UTF-8
+
+
+# Glueライブラリ取得
+
+RUN git clone -b $GLUE_VERSION --depth 1  https://github.com/awslabs/aws-glue-libs
+
+WORKDIR /opt
+
+# Maven取得
+
+RUN curl -L https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz \
+    | tar -xzv
+RUN ln -s /opt/apache-maven-$MAVEN_VERSION /opt/apache-maven
+ENV JAVA_HOME /usr/lib/jvm/java-1.8.0-openjdk/jre/
+ENV PATH $PATH:/opt/apache-maven/bin
+RUN mvn -version
+
+# Glueアーティファクト取得
+
+RUN curl -L https://aws-glue-etl-artifacts.s3.amazonaws.com/$GLUE_VERSION/spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION.tgz \
+    | tar -xzv
+RUN ln -s /opt/spark-$SPARK_VERSION-bin-spark-$SPARK_VERSION-bin-hadoop$HADOOP_VERSION /opt/spark
+ENV SPARK_HOME /opt/spark
+
+# Python3.6を利用する設定
+
+RUN unlink /bin/python
+RUN ln -s /bin/python3 /bin/python
+RUN ln -s /bin/pip3.6 /bin/pip
+
+# 異なるバージョンのjarがsparkとglueに混在するので適切なバージョンのみを見るよう設定
+
+RUN ln -s ${SPARK_HOME}/jars /aws-glue-libs/jarsv1
+
+WORKDIR /aws-glue-libs
+
+RUN /aws-glue-libs/bin/gluepyspark \
+    && rm -rf /root/.m2
+
+# maven2がローカルリポジトリ(/root/.m2)を作成して350MB程度消費するのを防ぐ
+RUN sed -i.bak -e 's/^mvn/#mvn/' /aws-glue-libs/bin/glue-setup.sh
+ENTRYPOINT ["/bin/sh", "-c", "while :; do sleep 10; done"]
