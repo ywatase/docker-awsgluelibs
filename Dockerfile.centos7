@@ -6,10 +6,9 @@ ARG MAVEN_VERSION=3.6.2
 ARG SPARK_VERSION=2.4.3
 ARG HADOOP_VERSION=2.8
 
-RUN yum install -y curl unzip  git \
-    && yum install -y https://centos7.iuscommunity.org/ius-release.rpm \
-    && yum install -y python36u python36u-libs python36u-devel python36u-pip \
-    && yum install -y java java-1.8.0-openjdk-devel \
+COPY yum-packages /tmp/yum-packages
+RUN yum install -y https://centos7.iuscommunity.org/ius-release.rpm \
+    && yum install -y $(cat /tmp/yum-packages | xargs) \
     && rm -rf /var/cache/yum/* \
     && yum clean all
 
