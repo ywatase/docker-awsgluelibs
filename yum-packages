@@ -1,0 +1,9 @@
+curl
+unzip
+git
+python36u
+python36u-libs
+python36u-devel
+python36u-pip
+java
+java-1.8.0-openjdk-devel
