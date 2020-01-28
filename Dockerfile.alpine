@@ -8,7 +8,8 @@ ARG MAVEN_VERSION=3.6.2
 ARG SPARK_VERSION=2.4.3
 ARG HADOOP_VERSION=2.8
 
-RUN apk -U --no-cache add curl git unzip python3 python3-dev
+COPY apk-packages /tmp/apk-packages
+RUN apk -U --no-cache add $(cat /tmp/apk-packages | xargs)
 
 #RUN localedef -f UTF-8 -i ja_JP ja_JP.UTF-8
 ENV LANG ja_JP.UTF-8
@@ -61,7 +62,6 @@ RUN ln -s ${SPARK_HOME}/jars /aws-glue-libs/jarsv1
 
 WORKDIR /aws-glue-libs
 
-RUN apk -U --no-cache add bash
 RUN /aws-glue-libs/bin/gluepyspark \
     && rm -rf /root/.m2
 
