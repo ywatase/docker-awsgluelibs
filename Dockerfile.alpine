@@ -1,4 +1,4 @@
-FROM java:8-alpine
+FROM openjdk:8-alpine
 LABEL maintainer ywatase
 
 # https://omohikane.com/centos7_docker_python36/ を参考にpythonとjavaをインストール

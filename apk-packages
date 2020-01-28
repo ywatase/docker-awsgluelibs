@@ -1,6 +1,8 @@
 bash
 curl
 git
+py3-mysqlclient
 python3
 python3-dev
 unzip
+zip
