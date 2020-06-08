@@ -57,6 +57,12 @@ RUN unlink /bin/python
 RUN ln -s /bin/python3 /bin/python
 RUN ln -s /bin/pip3.6 /bin/pip
 
+# mysql-connector-java-5.1.45 の配置
+
+RUN curl -L https://downloads.mysql.com/archives/get/p/3/file/mysql-connector-java-5.1.45.tar.gz | tar -xzv \
+    && cp /opt/mysql-connector-java-5.1.45/mysql-connector-java-5.1.45-bin.jar ${SPARK_HOME}/jars \
+    && rm -rf /opt/mysql-connector-java-5.1.45
+
 # 異なるバージョンのjarがsparkとglueに混在するので適切なバージョンのみを見るよう設定
 
 RUN ln -s ${SPARK_HOME}/jars /aws-glue-libs/jarsv1
